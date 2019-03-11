@@ -107,11 +107,10 @@ try {
                         $lineReport['already_added'] = false;
 
                         foreach ($watched as $watch) {
-                            if (strtotime($watch->watched_at) == $time) {
+                            if ( strtotime('-10 minutes', $time) <= strtotime($watch->watched_at) && strtotime('+10 minutes', $time) >= strtotime($watch->watched_at) ) {
                                 $lineReport['already_added'] = true;
                                 break;
                             }
-
                         }
 
                         $episodeTrakt->watched_at = date('Y-m-d H:i:s', $time);
@@ -164,7 +163,7 @@ try {
                         $watched = $trakt->users->history($username, 'movies', $movieTrakt->ids->trakt);
                         $lineReport['already_added'] = false;
                         foreach ($watched as $watch) {
-                            if (strtotime($watch->watched_at) == $time) {
+                            if ( strtotime('-10 minutes', $time) <= strtotime($watch->watched_at) && strtotime('+10 minutes', $time) >= strtotime($watch->watched_at) ) {
                                 $lineReport['already_added'] = true;
                                 break;
                             }
@@ -276,6 +275,9 @@ function config_write($config_data, $config_file) {
 
 <div class="row center-align">
     <a class="waves-effect waves-light btn blue" href="index.php"><i class="material-icons left">home</i>Home</a>
+</div>
+<div class="row center-align">
+    <a class="waves-effect waves-light btn blue btn-large" href="sync_now.php"><i class="material-icons left">sync</i>Sync now</a>
 </div>
 
 <div class="row center-align">
