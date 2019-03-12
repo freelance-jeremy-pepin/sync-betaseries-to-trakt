@@ -1,6 +1,7 @@
 <?php
 
 require __DIR__ . '/vendor/autoload.php';
+require_once 'Utility.php';
 
 use Wubs\Trakt\Auth;
 use Wubs\Trakt\Trakt;
@@ -42,12 +43,12 @@ $url_movie = "https://api.betaseries.com/movies/movie?key=$api_key_betaserie&id=
 try {
     // Init last_id
     if (empty($last_id)) {
-        $lastEvent = getDataJson("https://api.betaseries.com/timeline/member?key=$api_key_betaserie&id=$id_membre&nbpp=1&types=markas,film_add");
+        $lastEvent = Utility::getDataJson("https://api.betaseries.com/timeline/member?key=$api_key_betaserie&id=$id_membre&nbpp=1&types=markas,film_add");
 
         if ( !empty($lastEvent->events) ) {
             $last_id = $lastEvent->events[0]->id;
-            config_set($config, 'betaseries', 'lastId', $last_id);
-            config_write($config, __DIR__.'/config.ini');
+            Utility::config_set($config, 'betaseries', 'lastId', $last_id);
+            Utility::config_write($config, __DIR__.'/config.ini');
         }
 
         if (isset($lastEvent->errors) && !empty($lastEvent->errors)) {
@@ -56,7 +57,7 @@ try {
     }
 
     $url_historique = "https://api.betaseries.com/timeline/member?key=$api_key_betaserie&id=$id_membre&last_id=$last_id&nbpp=100&types=markas,film_add";
-    $historiques = getDataJson($url_historique);
+    $historiques = Utility::getDataJson($url_historique);
 
     if (isset($historiques->errors) && !empty($historiques->errors)) {
         throw new Exception($lastEvent->errors[0]->text);
@@ -68,8 +69,8 @@ try {
         if ( substr($historique->html, 0, strlen('a vu')) !== 'a vu' && substr($historique->html, 0, strlen('vient de regarder')) !== 'vient de regarder' ) {
             // Update last id
             $last_id = $historique->id;
-            config_set($config, 'betaseries', 'lastId', $last_id);
-            config_write($config, __DIR__.'/config.ini');
+            Utility::config_set($config, 'betaseries', 'lastId', $last_id);
+            Utility::config_write($config, __DIR__.'/config.ini');
             continue;
         }
 
@@ -80,8 +81,8 @@ try {
         try {
             switch ($historique->type) {
                 case 'markas':
-                    $episodeBS = json_decode(file_get_contents(str_replace('%id%', $historique->ref_id, $url_episode)));
-                    if (isNetflix($episodeBS->episode->platform_links)) {
+                    $episodeBS = Utility::getDataJson(str_replace('%id%', $historique->ref_id, $url_episode));
+                    if (Utility::isNetflix($episodeBS->episode->platform_links) || $config['app']['synchronizeOnlyNetflix'] == '0') {
                         $lineReport = [];
 
                         date_default_timezone_set('Europe/Paris');
@@ -138,8 +139,8 @@ try {
                     break;
 
                 case 'film_add':
-                    $movieBS = json_decode(file_get_contents(str_replace('%id%', $historique->ref_id, $url_movie)));
-                    if (isNetflix($movieBS->movie->platform_links)) {
+                    $movieBS = Utility::getDataJson(str_replace('%id%', $historique->ref_id, $url_movie));
+                    if (Utility::isNetflix($movieBS->movie->platform_links) || $config['app']['synchronizeOnlyNetflix'] == '0') {
                         $lineReport = [];
 
                         date_default_timezone_set('Europe/Paris');
@@ -194,8 +195,8 @@ try {
 
             // Update last id
             $last_id = $historique->id;
-            config_set($config, 'betaseries', 'lastId', $last_id);
-            config_write($config, __DIR__.'/config.ini');
+            Utility::config_set($config, 'betaseries', 'lastId', $last_id);
+            Utility::config_write($config, __DIR__.'/config.ini');
         } catch (\Exception $e) {
             $lineReport['error'] = $e->getMessage();
         }
@@ -208,44 +209,6 @@ try {
 
 } catch (\Exception $e) {
     echo $e->getMessage();
-}
-
-
-function isNetflix($platform_links) {
-    foreach ($platform_links as $platform_link) {
-        if ($platform_link->platform == 'Netflix') {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-function getDataJson($url) {
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    $data = curl_exec($ch);
-    curl_close($ch);
-    return json_decode($data);
-}
-
-// Update a setting in loaded inifile data
-function config_set(&$config_data, $section, $key, $value) {
-    $config_data[$section][$key] = $value;
-}
-
-// Serializes inifile config data back to disk.
-function config_write($config_data, $config_file) {
-    $new_content = '';
-    foreach ($config_data as $section => $section_content) {
-        $section_content = array_map(function($value, $key) {
-            return "$key=$value";
-        }, array_values($section_content), array_keys($section_content));
-        $section_content = implode("\n", $section_content);
-        $new_content .= "[$section]\n$section_content\n";
-    }
-    file_put_contents($config_file, $new_content);
 }
 ?>
 

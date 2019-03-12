@@ -1,28 +1,13 @@
 <?php
 
 require __DIR__ . '/vendor/autoload.php';
+require_once 'Utility.php';
 
 use Wubs\Trakt\Auth;
 use Wubs\Trakt\Trakt;
 
-// Update a setting in loaded inifile data
-function config_set(&$config_data, $section, $key, $value) {
-    $config_data[$section][$key] = $value;
-}
 
-// Serializes inifile config data back to disk.
-function config_write($config_data, $config_file) {
-    $new_content = '';
-    foreach ($config_data as $section => $section_content) {
-        $section_content = array_map(function($value, $key) {
-            return "$key=$value";
-        }, array_values($section_content), array_keys($section_content));
-        $section_content = implode("\n", $section_content);
-        $new_content .= "[$section]\n$section_content\n";
-    }
-    file_put_contents($config_file, $new_content);
-}
-
+Utility::buildConfig();
 ?>
 
 <!DOCTYPE html>
@@ -50,14 +35,20 @@ function config_write($config_data, $config_file) {
 
         // Save config
         if (isset($_GET['bs_api_key']) && isset($_GET['bs_member_id']) && isset($_GET['tr_client_id']) && isset($_GET['tr_client_secret']) && isset($_GET['tr_redirect_url'])) {
-            config_set($config, 'betaseries', 'apiKeyBetaserie', $_GET['bs_api_key']);
-            config_set($config, 'betaseries', 'idMembre', $_GET['bs_member_id']);
+            Utility::config_set($config, 'betaseries', 'apiKeyBetaserie', $_GET['bs_api_key']);
+            Utility::config_set($config, 'betaseries', 'idMembre', $_GET['bs_member_id']);
 
-            config_set($config, 'trakt_tv', 'clientId', $_GET['tr_client_id']);
-            config_set($config, 'trakt_tv', 'clientSecret', $_GET['tr_client_secret']);
-            config_set($config, 'trakt_tv', 'redirectUrl', $_GET['tr_redirect_url']);
+            Utility::config_set($config, 'trakt_tv', 'clientId', $_GET['tr_client_id']);
+            Utility::config_set($config, 'trakt_tv', 'clientSecret', $_GET['tr_client_secret']);
+            Utility::config_set($config, 'trakt_tv', 'redirectUrl', $_GET['tr_redirect_url']);
 
-            config_write($config, 'config.ini');
+            if (isset($_GET['synchronizeOnlyNetflix'])) {
+                Utility::config_set($config, 'app', 'synchronizeOnlyNetflix', '1');
+            } else {
+                Utility::config_set($config, 'app', 'synchronizeOnlyNetflix', '0');
+            }
+
+            Utility::config_write($config, 'config.ini');
 
             // Trakt.tv authorize
             $config = parse_ini_file('config.ini', true);
@@ -128,6 +119,9 @@ function config_write($config_data, $config_file) {
                             <div class="input-field col s12">
                                 <input id="tr_redirect_url" name="tr_redirect_url" type="text" value="<?php echo $trRedirectUrl?>"  required>
                                 <label for="tr_redirect_url">Redirect URL*</label>
+                            </div><div class="input-field col s12">
+                                <input id="ddd" name="ddd" type="text" value="<?php echo $trRedirectUrl?>"  required>
+                                <label for="ddd">Redirect URL*</label>
                             </div>
                         </div>
 
@@ -141,6 +135,19 @@ function config_write($config_data, $config_file) {
                             }
 
                         ?>
+
+                        <br><hr style="height: 1px; color: lightsalmon; background-color: lightsalmon; border: none;"><br>
+
+                        <h5 class="center-align">General settings</h5>
+
+                        <div class="row">
+                            <div class="input-field col s12">
+                                <label>
+                                    <input type="checkbox" id="synchronizeOnlyNetflix"  name="synchronizeOnlyNetflix"  <?php echo $config['app']['synchronizeOnlyNetflix'] == '1' ? 'checked' : '' ?> />
+                                    <span>Only synchronize Netflix</span>
+                                </label>
+                            </div>
+                        </div>
 
 
                         <div class="row right-align">

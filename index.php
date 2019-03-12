@@ -1,6 +1,11 @@
 <?php
 
+require_once 'Utility.php';
+
 $isConfigOK = true;
+
+
+Utility::buildConfig();
 
 $config = parse_ini_file('config.ini', true);
 
@@ -49,22 +54,17 @@ if (
 
 <div class="row center-align">
     <div class="col s12 m6 offset-m3">
-<!--        <div class="card teal">-->
-<!--            <div class="card-content">-->
-
-                <div class="row">
-                <?php
-                    if (!$isConfigOK) {
-                        echo '<h3>To start, please configure the app <a href="config.php" target="_blank">here</a>.</h3>';
-                    } else {
-                        echo '<a class="waves-effect waves-light btn btn-large blue" href="sync_now.php" style="margin-bottom: 16px;"><i class="material-icons left">sync</i>Sync now</a>';
-                        echo '<br>';
-                        echo '<a class="waves-effect waves-light btn btn-small grey" href="config.php" style="margin-top: 16px;"><i class="material-icons left">settings</i>Config</a>';
-                    }
-                ?>
-                </div>
-<!--            </div>-->
-<!--        </div>-->
+        <div class="row">
+        <?php
+            if (!$isConfigOK) {
+                echo '<h3>To start, please configure the app <a href="config.php" target="_blank">here</a>.</h3>';
+            } else {
+                echo '<a class="waves-effect waves-light btn btn-large blue" href="sync_now.php" style="margin-bottom: 16px;"><i class="material-icons left">sync</i>Sync now</a>';
+                echo '<br>';
+                echo '<a class="waves-effect waves-light btn btn-small grey" href="config.php" style="margin-top: 16px;"><i class="material-icons left">settings</i>Config</a>';
+            }
+        ?>
+        </div>
     </div>
 </div>
 
