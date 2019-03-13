@@ -1,5 +1,6 @@
 {
     "require": {
-        "wubs/trakt": "^2.2"
+        "wubs/trakt": "^2.2",
+        "phpmailer/phpmailer": "^6.0"
     }
 }

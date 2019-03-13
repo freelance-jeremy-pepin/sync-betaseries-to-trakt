@@ -6,7 +6,6 @@ require_once 'Utility.php';
 use Wubs\Trakt\Auth;
 use Wubs\Trakt\Trakt;
 
-
 Utility::buildConfig();
 ?>
 
@@ -31,7 +30,8 @@ Utility::buildConfig();
 <body style="background-color: #e3f2fd  ">
 
     <?php
-        $config = parse_ini_file('config.ini', true);
+        $config = Utility::getConfig();
+
 
         // Save config
         if (isset($_GET['bs_api_key']) && isset($_GET['bs_member_id']) && isset($_GET['tr_client_id']) && isset($_GET['tr_client_secret']) && isset($_GET['tr_redirect_url'])) {
