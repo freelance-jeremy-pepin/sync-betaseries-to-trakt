@@ -28,7 +28,7 @@
             <div class="card-content">
                 <span class="card-title">BetaSeries</span>
 
-                <form method="get" action="/search_member_betaseries.php">
+                <form method="get" action="/search_member_betaseries">
                     <div class="row">
                         <a href="https://www.betaseries.com/api/">Ask dev key</a>
 

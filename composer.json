@@ -1,6 +1,7 @@
 {
     "require": {
         "wubs/trakt": "^2.2",
-        "phpmailer/phpmailer": "^6.0"
+        "phpmailer/phpmailer": "^6.0",
+        "peppeocchi/php-cron-scheduler": "^2.4"
     }
 }

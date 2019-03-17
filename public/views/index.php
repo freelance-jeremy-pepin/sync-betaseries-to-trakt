@@ -1,29 +1,10 @@
 <?php
+use Repositories\Config;
+use Repositories\Utility;
 
-require_once 'Utility.php';
-
-$isConfigOK = true;
-
-
-Utility::buildConfig();
-
-$config = parse_ini_file('config.ini', true);
-
-// Check config
-if (
-    empty($config['trakt_tv']['clientId']) ||
-    empty($config['trakt_tv']['clientSecret']) ||
-    empty($config['trakt_tv']['redirectUrl']) ||
-    empty($config['trakt_tv']['accessToken']) ||
-    empty($config['trakt_tv']['expires']) ||
-    empty($config['trakt_tv']['refreshToken']) ||
-    empty($config['betaseries']['apiKeyBetaserie']) ||
-    empty($config['betaseries']['idMembre']) ) {
-
-    $isConfigOK = false;
-}
-
-
+Config::build();
+$isConfigOK = Config::isOK();
+$config = Config::get();
 ?>
 
 
@@ -59,9 +40,9 @@ if (
             if (!$isConfigOK) {
                 echo '<h3>To start, please configure the app <a href="config.php" target="_blank">here</a>.</h3>';
             } else {
-                echo '<a class="waves-effect waves-light btn btn-large blue" href="sync_now.php" style="margin-bottom: 16px;"><i class="material-icons left">sync</i>Sync now</a>';
+                echo '<a class="waves-effect waves-light btn btn-large blue" href="sync_now" style="margin-bottom: 16px;"><i class="material-icons left">sync</i>Sync now</a>';
                 echo '<br>';
-                echo '<a class="waves-effect waves-light btn btn-small grey" href="config.php" style="margin-top: 16px;"><i class="material-icons left">settings</i>Config</a>';
+                echo '<a class="waves-effect waves-light btn btn-small grey" href="config" target="config" style="margin-top: 16px;"><i class="material-icons left">settings</i>Config</a>';
             }
         ?>
         </div>

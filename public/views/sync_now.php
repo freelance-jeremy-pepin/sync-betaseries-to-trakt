@@ -1,16 +1,16 @@
 <?php
 
-require __DIR__ . '/vendor/autoload.php';
-require_once 'Utility.php';
+use Repositories\Config;
+use Repositories\App;
 
-$config = Utility::getConfig();
+$config = Config::get();
 
 // Check config
-if (!Utility::isConfigOk()) {
+if (!Config::isOK()) {
     die('Missing configuration. Please configure the app <a href="config.php">here</a>.');
 }
 
-$report = Utility::synchronize();
+$report = App::synchronize();
 ?>
 
 <!DOCTYPE html>
@@ -38,10 +38,10 @@ $report = Utility::synchronize();
 <h2 class="center-align orange-text text-darken-2"">Synchronization report</h2>
 
 <div class="row center-align">
-    <a class="waves-effect waves-light btn blue" href="index.php"><i class="material-icons left">home</i>Home</a>
+    <a class="waves-effect waves-light btn blue" href="/"><i class="material-icons left">home</i>Home</a>
 </div>
 <div class="row center-align">
-    <a class="waves-effect waves-light btn blue btn-large" href="sync_now.php"><i class="material-icons left">sync</i>Sync now</a>
+    <a class="waves-effect waves-light btn blue btn-large" href="sync_now"><i class="material-icons left">sync</i>Sync now</a>
 </div>
 
 <div class="row center-align">

@@ -6,88 +6,48 @@
  * Time: 19:39
  */
 
+namespace Repositories;
+
 use Wubs\Trakt\Auth;
 use Wubs\Trakt\Trakt;
 
-class Utility {
-    public static function buildConfig() {
-        if (!file_exists('config.ini')) {
-            touch('config.ini');
+use Repositories\Log;
+use Repositories\Config;
+use Repositories\Utility;
 
-            Utility::config_set($config, 'betaseries', 'apiKeyBetaserie', '');
-            Utility::config_set($config, 'betaseries', 'idMembre', '');
+class App {
+    public static function authentification() {
+        $config = Config::get();
 
-            Utility::config_set($config, 'trakt_tv', 'clientId', '');
-            Utility::config_set($config, 'trakt_tv', 'clientSecret', '');
-            Utility::config_set($config, 'trakt_tv', 'redirectUrl', '');
-            Utility::config_set($config, 'trakt_tv', 'accessToken', '');
-            Utility::config_set($config, 'trakt_tv', 'expires', '');
-            Utility::config_set($config, 'trakt_tv', 'refreshToken', '');
-
-            Utility::config_set($config, 'app', 'synchronizeOnlyNetflix', '1');
-
-            Utility::config_write($config, 'config.ini');
-        }
-    }
-
-    public static function isConfigOk() {
-        $config = Utility::getConfig();
-        if (
-            !empty($config['trakt_tv']['clientId']) &&
-            !empty($config['trakt_tv']['clientSecret']) &&
-            !empty($config['trakt_tv']['redirectUrl']) &&
-            !empty($config['trakt_tv']['accessToken']) &&
-            !empty($config['trakt_tv']['expires']) &&
-            !empty($config['trakt_tv']['refreshToken']) &&
-            !empty($config['betaseries']['apiKeyBetaserie']) &&
-            !empty($config['betaseries']['idMembre']) ) {
-
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    public static function getConfig() {
-        return parse_ini_file(__DIR__.'/config.ini', true);
-    }
-
-    public static function writeLog($log) {
         try {
-            $dir = __DIR__.'/log';
-            if (!is_dir($dir)) {
-                mkdir($dir, 0755);
-                chown($dir, 'www-data');
-            }
+            $provider = new Auth\TraktProvider($config['trakt_tv']['clientId'], $config['trakt_tv']['clientSecret'], $config['trakt_tv']['redirectUrl']);
+            $auth = new Auth\Auth($provider);
+            $trakt = new Trakt($auth);
 
-            $filename = $dir.'/'.date('Y-m-d').'.log';
-            if (!file_exists($filename)) {
-                touch($filename);
-                chown($filename, 'www-data');
-            }
+            $token = $trakt->auth->token($_GET['code']);
+            var_dump($token);
 
-            if (is_array($log)) {
-                $log = implode("\t", $log);
-            }
+            Config::set($config, 'trakt_tv', 'accessToken', $token->accessToken);
+            Config::set($config, 'trakt_tv', 'expires', $token->expires);
+            Config::set($config, 'trakt_tv', 'refreshToken', $token->refreshToken);
+            Config::write($config);
 
-            $log = '['.date('Y-m-d H:i:s').']'."\t".$log;
-
-            file_put_contents($filename, $log.PHP_EOL , FILE_APPEND | LOCK_EX);
+            header('Location: config');
         } catch (\Exception $e) {
-
+            echo $e->getMessage();
         }
     }
 
     public static function synchronize() {
-        Utility::writeLog('___Start sync___');
+        Log::write('___Start sync___');
 
-        if (!Utility::isConfigOk()) {
+        if (!Config::isOK()) {
             throw new Exception("Missing configuration elements!");
         }
 
         set_time_limit(3600); // 1 hour
 
-        $config = Utility::getConfig();
+        $config = Config::get();
 
 
         // TRAKT TV
@@ -114,8 +74,8 @@ class Utility {
 
                 if ( !empty($lastEvent->events) ) {
                     $last_id = $lastEvent->events[0]->id;
-                    Utility::config_set($config, 'betaseries', 'lastId', $last_id);
-                    Utility::config_write($config, __DIR__.'/config.ini');
+                    Config::set($config, 'betaseries', 'lastId', $last_id);
+                    Config::write($config);
                 }
 
                 if (isset($lastEvent->errors) && !empty($lastEvent->errors)) {
@@ -135,8 +95,8 @@ class Utility {
                 if ( substr($historique->html, 0, strlen('a vu')) !== 'a vu' && substr($historique->html, 0, strlen('vient de regarder')) !== 'vient de regarder' ) {
                     // Update last id
                     $last_id = $historique->id;
-                    Utility::config_set($config, 'betaseries', 'lastId', $last_id);
-                    Utility::config_write($config, __DIR__.'/config.ini');
+                    Config::set($config, 'betaseries', 'lastId', $last_id);
+                    Config::write($config);
                     continue;
                 }
 
@@ -148,7 +108,7 @@ class Utility {
                     switch ($historique->type) {
                         case 'markas':
                             $episodeBS = Utility::getDataJson(str_replace('%id%', $historique->ref_id, $url_episode));
-                            if (Utility::isNetflix($episodeBS->episode->platform_links) || $config['app']['synchronizeOnlyNetflix'] == '0') {
+                            if (App::isNetflix($episodeBS->episode->platform_links) || $config['app']['synchronizeOnlyNetflix'] == '0') {
                                 $lineReport = [];
 
                                 date_default_timezone_set('Europe/Paris');
@@ -206,7 +166,7 @@ class Utility {
 
                         case 'film_add':
                             $movieBS = Utility::getDataJson(str_replace('%id%', $historique->ref_id, $url_movie));
-                            if (Utility::isNetflix($movieBS->movie->platform_links) || $config['app']['synchronizeOnlyNetflix'] == '0') {
+                            if (App::isNetflix($movieBS->movie->platform_links) || $config['app']['synchronizeOnlyNetflix'] == '0') {
                                 $lineReport = [];
 
                                 date_default_timezone_set('Europe/Paris');
@@ -261,14 +221,14 @@ class Utility {
 
                     // Update last id
                     $last_id = $historique->id;
-                    Utility::config_set($config, 'betaseries', 'lastId', $last_id);
-                    Utility::config_write($config, __DIR__.'/config.ini');
+                    Config::set($config, 'betaseries', 'lastId', $last_id);
+                    Config::write($config);
 
                     // Report
                     $statut = $lineReport['added'] ===true ? 'Added' : 'Not added';
                     if ($lineReport['already_added'] === true) $statut = 'Already added';
 
-                    Utility::writeLog([
+                    Log::write([
                                           empty($statut) ? '' : $statut,
                                           empty($lineReport['type']) ? '' : $lineReport['type'],
                                           empty($lineReport['title']) ? '' : $lineReport['title'],
@@ -277,7 +237,7 @@ class Utility {
                 } catch (\Exception $e) {
                     $lineReport['error'] = $e->getMessage();
 
-                    Utility::writeLog([
+                    Log::write([
                                           'Error',
                                           empty($lineReport['type']) ? '' : $lineReport['type'],
                                           empty($lineReport['title']) ? '' : $lineReport['title'],
@@ -295,7 +255,7 @@ class Utility {
         } catch (\Exception $e) {
             echo $e->getMessage();
         } finally {
-            Utility::writeLog('___End sync___');
+            Log::write('___End sync___');
         }
 
         return $report;
@@ -309,32 +269,5 @@ class Utility {
         }
 
         return false;
-    }
-
-    public static function getDataJson($url) {
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        $data = curl_exec($ch);
-        curl_close($ch);
-        return json_decode($data);
-    }
-
-    // Update a setting in loaded inifile data
-    public static function config_set(&$config_data, $section, $key, $value) {
-        $config_data[$section][$key] = $value;
-    }
-
-    // Serializes inifile config data back to disk.
-    public static function config_write($config_data, $config_file) {
-        $new_content = '';
-        foreach ($config_data as $section => $section_content) {
-            $section_content = array_map(function($value, $key) {
-                return "$key=$value";
-            }, array_values($section_content), array_keys($section_content));
-            $section_content = implode("\n", $section_content);
-            $new_content .= "[$section]\n$section_content\n";
-        }
-        file_put_contents($config_file, $new_content);
     }
 }
