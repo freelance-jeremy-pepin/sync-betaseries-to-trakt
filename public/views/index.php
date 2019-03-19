@@ -38,7 +38,7 @@ $config = Config::get();
         <div class="row">
         <?php
             if (!$isConfigOK) {
-                echo '<h3>To start, please configure the app <a href="config.php" target="_blank">here</a>.</h3>';
+                echo '<h3>To start, please configure the app <a href="config" target="_blank">here</a>.</h3>';
             } else {
                 echo '<a class="waves-effect waves-light btn btn-large blue" href="sync_now" style="margin-bottom: 16px;"><i class="material-icons left">sync</i>Sync now</a>';
                 echo '<br>';
