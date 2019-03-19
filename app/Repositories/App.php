@@ -134,7 +134,7 @@ class App {
                                 $lineReport['already_added'] = false;
 
                                 foreach ($watched as $watch) {
-                                    if ( strtotime('-10 minutes', $time) <= strtotime($watch->watched_at) && strtotime('+10 minutes', $time) >= strtotime($watch->watched_at) ) {
+                                    if ( strtotime('-1 day', $time) <= strtotime($watch->watched_at) && strtotime('+1 day', $time) >= strtotime($watch->watched_at) ) {
                                         $lineReport['already_added'] = true;
                                         break;
                                     }
@@ -190,7 +190,7 @@ class App {
                                 $watched = $trakt->users->history($username, 'movies', $movieTrakt->ids->trakt);
                                 $lineReport['already_added'] = false;
                                 foreach ($watched as $watch) {
-                                    if ( strtotime('-10 minutes', $time) <= strtotime($watch->watched_at) && strtotime('+10 minutes', $time) >= strtotime($watch->watched_at) ) {
+                                    if ( strtotime('-1 day', $time) <= strtotime($watch->watched_at) && strtotime('+1 day', $time) >= strtotime($watch->watched_at) ) {
                                         $lineReport['already_added'] = true;
                                         break;
                                     }
