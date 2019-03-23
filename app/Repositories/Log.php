@@ -37,6 +37,11 @@ class Log {
 
     public static function buildHTML($filename, &$mail=null) {
         $filename = log_path().'/'.$filename;
+
+        if (!file_exists($filename)) {
+            throw new \Exception("File do not exist.");
+        }
+
         $handle = fopen($filename, "r");
         $coutLines = 0;
 
@@ -46,10 +51,10 @@ class Log {
         $html .= '    <thead>';
         $html .= '        <tr>';
         $html .= '            <th></th>';
-        $html .= '            <th>Date</th>';
+        $html .= '            <th>Sync at</th>';
         $html .= '            <th>Title</th>';
         $html .= '            <th>Type</th>';
-        $html .= '            <th>Date</th>';
+        $html .= '            <th>Watched at</th>';
         $html .= '            <th class="center-align">Added</th>';
         $html .= '            <th></th>';
         $html .= '        </tr>';
@@ -73,7 +78,7 @@ class Log {
 
                 $coutLines ++;
 
-                if (!empty($parts[5])) {
+                if (!empty($parts[5]) && $mail != null) {
                     $poster = file_get_contents($rootPathTMDB.'/'.basename($parts[5]));
                     $f = finfo_open();
                     $mimetype = finfo_buffer($f, $poster, FILEINFO_MIME_TYPE);
@@ -86,13 +91,17 @@ class Log {
                 $date = \DateTime::createFromFormat('Y-m-d H:i:s', $date);
 
                 $html .= '<tr>';
-                $html .= '    <td>'.(empty($parts[5]) ? '' : '<img style="max-width: 100px;" src="cid:img_'.$coutLines.'">').'</td>'; // POSTER
+                if ($mail != null) {
+                    $html .= '    <td>'.(empty($parts[5]) ? '' : '<img style="max-width: 100px;" src="cid:img_'.$coutLines.'">').'</td>'; // POSTER
+                } else {
+                    $html .= '    <td>'.(empty($parts[5]) ? '' : '<img style="max-width: 100px;" src="'.$parts[5].'">').'</td>'; // POSTER
+                }
                 $html .= '    <td>'.$date->format('H:i:s').'</td>'; // DATE
-                $html .= '    <td>'.(empty($parts[3]) ? '' : $parts[3]).'</td>'; // TITLE
+                $html .= '    <td style="font-weight: bold">'.(empty($parts[3]) ? '' : $parts[3]).'</td>'; // TITLE
                 $html .= '    <td>'.(empty($parts[2]) ? '' : $parts[2]).'</td>'; // TYPE
                 $html .= '    <td>'.(empty($parts[4]) ? '' : $parts[4]).'</td>'; // WATCHED AT
-                $html .= '    <td class="center-align">'.($parts[1]=='Added' ? '<font color="green">Success</font>' : '<font color="red">Error</font>').'</td>'; // ADDED
-                $html .= '    <td class="center-align">'.(!empty($parts[7]) ? 'Error: '.$parts[7] : '').' '.($parts[1]=='Already added' ? 'Already added' : '').'</td>'; // ERROR
+                $html .= '    <td style="font-weight: bold">'.($parts[1]=='Added' ? '<font color="green">Success</font>' : '<font color="red">Error</font>').'</td>'; // ADDED
+                $html .= '    <td style="font-weight: bold">'.(!empty($parts[7]) ? 'Error: '.$parts[7] : '').' '.($parts[1]=='Already added' ? 'Already added' : '').'</td>'; // ERROR
                 $html .= '</tr>';
             }
 

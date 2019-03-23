@@ -59,7 +59,7 @@ $report = App::synchronize();
                     echo '            <th></th>';
                     echo '            <th>Title</th>';
                     echo '            <th>Type</th>';
-                    echo '            <th>Date</th>';
+                    echo '            <th>Watched at</th>';
                     echo '            <th class="center-align">Added</th>';
                     echo '            <th></th>';
                     echo '        </tr>';
