@@ -9,15 +9,16 @@
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
-use Repositories\Config;
 require base_path().'/vendor/phpmailer/phpmailer/src/Exception.php';
 require base_path().'/vendor/phpmailer/phpmailer/src/PHPMailer.php';
 require base_path().'/vendor/phpmailer/phpmailer/src/SMTP.php';
 
 class Utility {
-	public static function sendMail($body, $text, $recipients, $attachments=[]) {
+	public static function sendMail($subject, $body, $recipients, $attachments=[], $mail=null) {
+		if (empty($mail)) {
+            $mail = new PHPMailer(true);
+        }
 
-		$mail = new PHPMailer(true);
 		try {
 			$config = Config::get();
 
@@ -53,8 +54,8 @@ class Utility {
 
 			//Content
 			$mail->isHTML(true);
-			$mail->Subject = $body;
-			$mail->Body = $text;
+			$mail->Subject = $subject;
+			$mail->Body = $body;
 
 			$mail->send();
 		} catch (Exception $e) {

@@ -27,9 +27,6 @@ switch ($request) {
     case '/authentification' :
         require __DIR__ . '/views/authentification.php';
         break;
-    case '/send_mail_test' :
-        require __DIR__ . '/views/send_mail_test.php';
-        break;
     default:
         require __DIR__ . '/views/error/404.php';
         break;

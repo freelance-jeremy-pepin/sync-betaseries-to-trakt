@@ -25,7 +25,6 @@ class App {
             $trakt = new Trakt($auth);
 
             $token = $trakt->auth->token($_GET['code']);
-            var_dump($token);
 
             Config::set($config, 'trakt_tv', 'accessToken', $token->accessToken);
             Config::set($config, 'trakt_tv', 'expires', $token->expires);
@@ -64,6 +63,12 @@ class App {
 
         $url_episode = "https://api.betaseries.com/episodes/display?key=$api_key_betaserie&id=%id%";
         $url_movie = "https://api.betaseries.com/movies/movie?key=$api_key_betaserie&id=%id%";
+
+        // TMDB
+        $api_key_tmdb = $config['tmdb']['tmdb_api_key'];
+        $tmdb_url_movie = "https://api.themoviedb.org/3/movie/{id}}?api_key=$api_key_tmdb";
+        $tmdb_url_show = "https://api.themoviedb.org/3/tv/{id}?api_key=$api_key_tmdb";
+        $tmdb_root_path_image = '//image.tmdb.org/t/p/original';
 
         $report = [];
 
@@ -108,6 +113,16 @@ class App {
                     switch ($historique->type) {
                         case 'markas':
                             $episodeBS = Utility::getDataJson(str_replace('%id%', $historique->ref_id, $url_episode));
+
+                            $showTrakt = null;
+                            $results = $trakt->search->byId('tvdb', $episodeBS->episode->show->thetvdb_id);
+                            foreach ($results as $result) {
+                                if ($result->type == 'show') {
+                                    $showTrakt = $result->show;
+                                    break;
+                                }
+                            }
+
                             if (App::isNetflix($episodeBS->episode->platform_links) || $config['app']['synchronizeOnlyNetflix'] == '0') {
                                 $lineReport = [];
 
@@ -126,6 +141,14 @@ class App {
 
                                 if ($episodeTrakt == null) {
                                     throw new Exception('Episode not found in Trakt with THE TVDB ID: '. $episodeBS->episode->thetvdb_id);
+                                }
+
+                                if (!empty($showTrakt)) {
+                                    // Get Poster from TMDB
+                                    $showTMDB = Utility::getDataJson(str_replace('{id}', $showTrakt->ids->tmdb, $tmdb_url_show));
+                                    if ( !empty($showTMDB->poster_path) ) {
+                                        $lineReport['poster'] = $tmdb_root_path_image.'/'.$showTMDB->poster_path;
+                                    }
                                 }
 
                                 // Check if episode not already added to history
@@ -185,6 +208,12 @@ class App {
                                     throw new Exception('Movie not found in Trakt with TMDB ID: '. $movieBS->movie->tmdb_id);
                                 }
 
+                                // Get Poster from TMDB
+                                $movieTMDB = Utility::getDataJson(str_replace('{id}', $movieTrakt->ids->tmdb, $tmdb_url_movie));
+                                if (!empty($movieTMDB->poster_path)) {
+                                    $lineReport['poster'] = $tmdb_root_path_image.'/'.$movieTMDB->poster_path;
+                                }
+
                                 // Check if movie not already added to history
                                 $username = $trakt->users->settings($token)->toArray()[0]->user->username;
                                 $watched = $trakt->users->history($username, 'movies', $movieTrakt->ids->trakt);
@@ -233,6 +262,7 @@ class App {
                                           empty($lineReport['type']) ? '' : $lineReport['type'],
                                           empty($lineReport['title']) ? '' : $lineReport['title'],
                                           empty($lineReport['watched_at']) ? '' : $lineReport['watched_at'],
+                                          empty($lineReport['poster']) ? '' : $lineReport['poster'],
                                       ]);
                 } catch (\Exception $e) {
                     $lineReport['error'] = $e->getMessage();
@@ -242,6 +272,7 @@ class App {
                                           empty($lineReport['type']) ? '' : $lineReport['type'],
                                           empty($lineReport['title']) ? '' : $lineReport['title'],
                                           empty($lineReport['watched_at']) ? '' : $lineReport['watched_at'],
+                                          empty($lineReport['poster']) ? '' : $lineReport['poster'],
                                           empty($lineReport['error']) ? '' : $lineReport['error'],
                                       ]);
                 }

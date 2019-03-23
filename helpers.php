@@ -15,3 +15,7 @@ function log_path() {
 function log_name() {
 	return date('Y-m-d').'.log';
 }
+
+function log_name_yesterday() {
+	return date('Y-m-d',strtotime("-1 days")).'.log';
+}

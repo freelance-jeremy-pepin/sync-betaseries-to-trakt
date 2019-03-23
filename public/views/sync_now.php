@@ -56,6 +56,7 @@ $report = App::synchronize();
                     echo '<table>';
                     echo '    <thead>';
                     echo '        <tr>';
+                    echo '            <th></th>';
                     echo '            <th>Title</th>';
                     echo '            <th>Type</th>';
                     echo '            <th>Date</th>';
@@ -67,6 +68,7 @@ $report = App::synchronize();
 
                     foreach ($report as $line) {
                         echo '<tr>';
+                        echo '    <td>'.(empty($line['poster']) ? '' : '<img style="max-width: 100px;" src="'.$line['poster'].'">').'</td>';
                         echo '    <td>'.(empty($line['title']) ? '' : $line['title']).'</td>';
                         echo '    <td>'.(empty($line['type']) ? '' : $line['type']).'</td>';
                         echo '    <td>'.(empty($line['watched_at']) ? '' : $line['watched_at']).'</td>';

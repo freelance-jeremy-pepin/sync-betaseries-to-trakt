@@ -48,6 +48,7 @@ class Config {
             !empty($config['trakt_tv']['accessToken']) &&
             !empty($config['trakt_tv']['expires']) &&
             !empty($config['trakt_tv']['refreshToken']) &&
+            !empty($config['tmdb']['tmdb_api_key']) &&
             !empty($config['betaseries']['apiKeyBetaserie']) &&
             !empty($config['betaseries']['idMembre']) ) {
 

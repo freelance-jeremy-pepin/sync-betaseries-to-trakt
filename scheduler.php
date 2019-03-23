@@ -16,6 +16,8 @@ use Repositories\Config;
 use Repositories\Utility;
 use Repositories\Log;
 
+use PHPMailer\PHPMailer\PHPMailer;
+
 $config = Config::get();
 
 // Create a new scheduler
@@ -26,13 +28,23 @@ try {
 	if (!empty($config['app']['emailsReceiveLogs'])) {
 		$scheduler->call(function() {
 			$config = Config::get();
-			Utility::sendMail(
-				'Daily report '.date('m/d/Y').' - Synchonize Netflix and Trakt.tv', 
-				'Here your daily report.', 
-				explode(';', $config['app']['emailsReceiveLogs']), 
-				[log_path().'/'.log_name()]
-			);
-		})->daily('23:59');
+
+            $mail = new PHPMailer(true);
+            $table = Log::buildHTML(log_name_yesterday(), $mail);
+            $date = date('m/d/Y',strtotime("-1 days"));
+
+            $body = file_get_contents(base_path().'/public/views/mail_log.php');
+            $body = str_replace('{date}', $date, $body);
+            $body = str_replace('{table}', $table, $body);
+
+            Utility::sendMail(
+                'Daily report '.$date.' - Synchonize Netflix and Trakt.tv',
+                $body,
+                explode(';', $config['app']['emailsReceiveLogs']),
+                [log_path().'/'.log_name_yesterday()],
+                $mail
+            );
+		})->daily('06:00');
 	}
 } catch (Exception $e) {
 	echo $e->getMessage();

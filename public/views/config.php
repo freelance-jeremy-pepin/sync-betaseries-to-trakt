@@ -41,6 +41,8 @@ Config::build();
             Config::set($config, 'trakt_tv', 'clientSecret', $_GET['tr_client_secret']);
             Config::set($config, 'trakt_tv', 'redirectUrl', $_GET['tr_redirect_url']);
 
+            Config::set($config, 'tmdb', 'tmdb_api_key', $_GET['tmdb_api_key']);
+
             if (isset($_GET['synchronizeOnlyNetflix'])) {
                 Config::set($config, 'app', 'synchronizeOnlyNetflix', '1');
             } else {
@@ -85,10 +87,12 @@ Config::build();
         $trClientSecret = $config['trakt_tv']['clientSecret'];
         $trRedirectUrl = $config['trakt_tv']['redirectUrl'];
 
+        $tmdb_api_key = empty($config['tmdb']['tmdb_api_key']) ? '' : $config['tmdb']['tmdb_api_key'];
+
         $trAccessToken = $config['trakt_tv']['accessToken'];
         $trExpires = $config['trakt_tv']['expires'];
         $trRefreshToken = $config['trakt_tv']['refreshToken'];
-        
+
         $scheduleSyncNow = $config['app']['scheduleSyncNow'];
         $emailsReceiveLogs = empty($config['app']['emailsReceiveLogs']) ? '' : $config['app']['emailsReceiveLogs'];
         $deleteLogAfterXDays = empty($config['app']['deleteLogAfterXDays']) ? '' : $config['app']['deleteLogAfterXDays'];
@@ -165,6 +169,20 @@ Config::build();
                             }
 
                         ?>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-content">
+                        <h4 class="center-align">TMDB</h4>
+                        <div class="center-align"><a href="https://www.themoviedb.org/settings/api?language=fr-FR" target="_blank">Create an API key</a></div>
+
+                        <div class="row">
+                            <div class="input-field col s12">
+                                <input id="tmdb_api_key" name="tmdb_api_key" type="text" value="<?php echo $tmdb_api_key?>"  required>
+                                <label for="tmdb_api_key">API Key*</label>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
