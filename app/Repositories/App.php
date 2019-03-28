@@ -173,7 +173,7 @@ class App {
 
                                 date_default_timezone_set($default_time_zone);
                                 $lineReport['title'] = $episodeBS->episode->show->title.' • '.$episodeTrakt->season.'x'.$episodeTrakt->number.' - '.$episodeTrakt->title;
-                                $lineReport['watched_at'] = date('m/d/Y H:i:s', $time);
+                                $lineReport['watched_at'] = date('d/m/Y H:i', $time);
                                 $lineReport['type'] = 'Episode';
 
                                 if (isset($resultSync) && !empty($resultSync) && is_array($resultSync->toArray()) && $resultSync[0]->added->episodes == 1) {
@@ -236,7 +236,7 @@ class App {
 
                                 date_default_timezone_set($default_time_zone);
                                 $lineReport['title'] = $movieBS->movie->title;
-                                $lineReport['watched_at'] = date('m/d/Y H:i:s', $time);
+                                $lineReport['watched_at'] = date('d/m/Y H:i', $time);
                                 $lineReport['type'] = 'Movie';
 
                                 if (isset($resultSync) && !empty($resultSync) && is_array($resultSync->toArray()) && $resultSync[0]->added->movies == 1) {

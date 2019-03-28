@@ -31,7 +31,7 @@ try {
 
             $mail = new PHPMailer(true);
             $table = Log::buildHTML(log_name_yesterday(), $mail);
-            $date = date('m/d/Y',strtotime("-1 days"));
+            $date = date('d/m/Y',strtotime("-1 days"));
 
             $body = file_get_contents(base_path().'/public/views/mail_log.php');
             $body = str_replace('{date}', $date, $body);

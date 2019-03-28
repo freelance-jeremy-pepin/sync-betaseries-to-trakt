@@ -55,8 +55,8 @@ class Log {
         $html .= '            <th>Title</th>';
         $html .= '            <th>Type</th>';
         $html .= '            <th>Watched at</th>';
-        $html .= '            <th class="center-align">Added</th>';
-        $html .= '            <th></th>';
+        $html .= '            <th class="center-align">Status</th>';
+        $html .= '            <th>Infos</th>';
         $html .= '        </tr>';
         $html .= '    </thead>';
         $html .= '    <tbody>';
@@ -96,11 +96,20 @@ class Log {
                 } else {
                     $html .= '    <td>'.(empty($parts[5]) ? '' : '<img style="max-width: 100px;" src="'.$parts[5].'">').'</td>'; // POSTER
                 }
-                $html .= '    <td>'.$date->format('H:i:s').'</td>'; // DATE
+                $html .= '    <td>'.$date->format('H:i').'</td>'; // DATE
                 $html .= '    <td style="font-weight: bold">'.(empty($parts[3]) ? '' : $parts[3]).'</td>'; // TITLE
                 $html .= '    <td>'.(empty($parts[2]) ? '' : $parts[2]).'</td>'; // TYPE
                 $html .= '    <td>'.(empty($parts[4]) ? '' : $parts[4]).'</td>'; // WATCHED AT
-                $html .= '    <td style="font-weight: bold">'.($parts[1]=='Added' ? '<font color="green">Success</font>' : '<font color="red">Error</font>').'</td>'; // ADDED
+
+                // ADDED
+                if ($parts[1]=='Added') {
+                    $html .= '    <td style="font-weight: bold"><font color="green">Success</font></td>';
+                } else if ($parts[1]=='Already added') {
+                    $html .= '    <td style="font-weight: bold"><font color="orange">Skipped</font></td>';
+                } else {
+                    $html .= '    <td style="font-weight: bold"><font color="red">Error</font></td>';
+                }
+
                 $html .= '    <td style="font-weight: bold">'.(!empty($parts[7]) ? 'Error: '.$parts[7] : '').' '.($parts[1]=='Already added' ? 'Already added' : '').'</td>'; // ERROR
                 $html .= '</tr>';
             }
