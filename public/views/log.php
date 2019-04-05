@@ -108,20 +108,23 @@
 </head>
 
 <body>
-<h2>Daily report : <?php echo empty($_GET['date']) ? '{date}' : $_GET['date'] ?></h2>
+<h2>Daily report : <?php echo empty($_GET['date']) ? date('Y-m-d') : $_GET['date'] ?></h2>
 <div class="row center-align">
     <div class="col s12 m6 offset-m3">
         <div class="row">
             <?php
             if (empty($_GET['date'])) {
-                echo '{table}';
+                $MaDate = date('Y-m-d');
             } else {
-                try {
-                    echo \Repositories\Log::buildHTML($_GET['date'].'.log');
-                } catch (\Exception $e) {
-                    echo $e->getMessage();
-                }
+                 $MaDate = $_GET['date'];
             }
+
+            try {
+                echo \Repositories\Log::buildHTML($MaDate.'.log');
+            } catch (\Exception $e) {
+                echo $e->getMessage();
+            }
+
             ?>
         </div>
     </div>
