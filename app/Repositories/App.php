@@ -11,10 +11,6 @@ namespace Repositories;
 use Wubs\Trakt\Auth;
 use Wubs\Trakt\Trakt;
 
-use Repositories\Log;
-use Repositories\Config;
-use Repositories\Utility;
-
 class App {
     public static function authentification() {
         $config = Config::get();
@@ -59,7 +55,6 @@ class App {
         // BETASERIES
         $api_key_betaserie = $config['betaseries']['apiKeyBetaserie'];
         $id_membre = $config['betaseries']['idMembre'];
-        $last_id = $config['betaseries']['lastId'];
 
         $url_episode = "https://api.betaseries.com/episodes/display?key=$api_key_betaserie&id=%id%";
         $url_movie = "https://api.betaseries.com/movies/movie?key=$api_key_betaserie&id=%id%";
@@ -73,41 +68,42 @@ class App {
         $report = [];
 
         try {
-            // Init last_id
-            if (empty($last_id)) {
-                $lastEvent = Utility::getDataJson("https://api.betaseries.com/timeline/member?key=$api_key_betaserie&id=$id_membre&nbpp=1&types=markas,film_add");
-
-                if ( !empty($lastEvent->events) ) {
-                    $last_id = $lastEvent->events[0]->id;
-                    Config::set($config, 'betaseries', 'lastId', $last_id);
-                    Config::write($config);
-                }
-
-                if (isset($lastEvent->errors) && !empty($lastEvent->errors)) {
-                    throw new Exception($lastEvent->errors[0]->text);
-                }
-            }
-
-            $url_historique = "https://api.betaseries.com/timeline/member?key=$api_key_betaserie&id=$id_membre&last_id=$last_id&nbpp=100&types=markas,film_add";
+            $url_historique = "https://api.betaseries.com/timeline/member?key=$api_key_betaserie&id=$id_membre&nbpp=100&types=markas,film_add";
             $historiques = Utility::getDataJson($url_historique);
 
-            if (isset($historiques->errors) && !empty($historiques->errors)) {
-                throw new Exception($lastEvent->errors[0]->text);
+            // Get list of ids
+            $ids = Log::getIds();
+
+            if (empty($ids)) {
+                Log::initIds($historiques->events);
+                $ids = Log::getIds();
             }
 
-            $historiques->events = array_reverse($historiques->events);
             foreach ($historiques->events as $historique) {
                 if ( substr($historique->html, 0, strlen('a vu')) !== 'a vu' && substr($historique->html, 0, strlen('vient de regarder')) !== 'vient de regarder' ) {
-                    // Update last id
-                    $last_id = $historique->id;
-                    Config::set($config, 'betaseries', 'lastId', $last_id);
-                    Config::write($config);
                     continue;
                 }
 
 
                 $default_time_zone = date_default_timezone_get();
                 $lineReport = [];
+
+                $id = $historique->id;
+
+                if (array_key_exists($id, $ids)) {
+                    $ids[$id]["in_timeline"] = true;
+                }
+
+                if (array_key_exists($id, $ids) && $ids[$id]["status"] == "ok") {
+                    continue;
+                }
+
+                if (empty($ids[$id])) {
+                    $ids[$id] = [
+                        "id" => $id,
+                        "status" => "undefined"
+                    ];
+                }
 
                 try {
                     switch ($historique->type) {
@@ -248,10 +244,8 @@ class App {
                             break;
                     }
 
-                    // Update last id
-                    $last_id = $historique->id;
-                    Config::set($config, 'betaseries', 'lastId', $last_id);
-                    Config::write($config);
+                    // Update status
+                    $ids[$id]["status"] = "ok";
 
                     // Report
                     $statut = $lineReport['added'] ===true ? 'Added' : 'Not added';
@@ -267,6 +261,8 @@ class App {
                 } catch (\Exception $e) {
                     $lineReport['error'] = $e->getMessage();
 
+                    $ids[$id]["status"] = "error";
+
                     Log::write([
                                           'Error',
                                           empty($lineReport['type']) ? '' : $lineReport['type'],
@@ -277,6 +273,8 @@ class App {
                                       ]);
                 }
                 finally {
+                    Log::writeIds($ids);
+
                     if (!empty($lineReport)) {
                         $report[] = $lineReport;
                     }
@@ -286,6 +284,7 @@ class App {
         } catch (\Exception $e) {
             echo $e->getMessage();
         } finally {
+            Log::writeIds($ids);
             Log::write('___End sync___');
         }
 

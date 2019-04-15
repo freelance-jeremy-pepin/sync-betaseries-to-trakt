@@ -154,4 +154,86 @@ class Log {
             }  
         }  
     }
+
+    public static function getIds() {
+        $dir = log_path();
+        if (!is_dir($dir)) {
+            mkdir($dir, 0755);
+            chown($dir, 'www-data');
+        }
+
+        $filename = $dir.'/sync.log';
+        if (!file_exists($filename)) {
+            touch($filename);
+            chown($filename, 'www-data');
+
+            return [];
+        }
+
+        $handle = fopen($filename, "r");
+
+        $ids = [];
+        if ($handle) {
+            while (($line = fgets($handle)) !== false) {
+                $parts = explode("\t", $line);
+
+                if (empty($parts[0]) || empty($parts[1])) continue;
+
+                $ids[trim($parts[0])] = [
+                    "id" => trim($parts[0]),
+                    "status" => trim($parts[1]),
+                    "in_timeline" => false
+                ];
+            }
+            fclose($handle);
+
+            return $ids;
+        } else {
+            return [];
+        }
+
+    }
+
+    public static function initIds($events) {
+        $ids = [];
+
+        foreach ($events as $event) {
+            $ids[$event->id] = [
+                "id" => $event->id,
+                "status" => "ok"
+            ];
+        }
+        self::writeIds($ids);
+    }
+
+    public static function writeIds($ids) {
+        $dir = log_path();
+        if (!is_dir($dir)) {
+            mkdir($dir, 0755);
+            chown($dir, 'www-data');
+        }
+
+        $filename = $dir.'/sync.log';
+        if (!file_exists($filename)) {
+            touch($filename);
+            chown($filename, 'www-data');
+
+            return [];
+        }
+
+        file_put_contents($filename, "");
+
+        foreach ($ids as $id) {
+
+            if (!isset($id["status"])) $id["status"] = "ok";
+            if (!isset($id["in_timeline"])) $id["in_timeline"] = true;
+
+            if ($id["in_timeline"] == false) {
+                continue;
+            };
+
+            $line = $id["id"]."\t".$id["status"]."\n";
+            file_put_contents($filename, $line, FILE_APPEND);
+        }
+    }
 }
